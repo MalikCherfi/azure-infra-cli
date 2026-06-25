@@ -10,7 +10,7 @@ def hello(req: func.HttpRequest) -> func.HttpResponse:
     response = {
         "message": "Hello from AzureTech !",
         "service": "Azure Functions (Serverless)",
-        "runtime": "Python 3.14",
+        "runtime": "Python 3.11",
         "host": socket.gethostname(),
     }
     return func.HttpResponse(

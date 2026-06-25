@@ -38,10 +38,3 @@ jobs:
           app-name: ${{ secrets.AZURE_APP_NAME_AZURE_FUNCTION }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_AZURE_FUNCTION }}
           package: func.zip
-
-      - name: Configure health check
-        run: |
-          az webapp config set \
-          --name ${{ secrets.AZURE_APP_NAME_AZURE_FUNCTION }} \
-          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-          --generic-configurations '{"healthCheckPath": "/api/health"}'

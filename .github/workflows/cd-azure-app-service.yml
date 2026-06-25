@@ -1,0 +1,41 @@
+name: Deploy to Azure App Service
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    deploy:
+        name: Build & Deploy PHP app
+        runs-on: ubuntu-latest
+
+        steps:
+            # ── 1. Récupération du code ──────────────────────────────
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            # ── 2. Packaging ZIP ────────────────────────────────────
+            - name: Package application
+              run: zip -r app.zip index.php
+
+            # ── 3. Déploiement sur App Service ───────────────────────
+            - name: Deploy to Azure Web App
+              uses: azure/webapps-deploy@v3
+              with:
+                  app-name: ${{ secrets.AZURE_APP_NAME_APP_SERVICE }}
+                  publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_APP_SERVICE }}
+                  package: app.zip
+
+            # ── 5. Vérification ──────────────────────────────────────
+            - name: Health check
+              run: |
+                  sleep 20
+                  URL="https://${{ secrets.AZURE_APP_NAME_APP_SERVICE }}.azurewebsites.net"
+                  echo "Testing $URL"
+                  curl --fail --silent "$URL" | python3 -m json.tool
+
+            # ── 6. Logout ────────────────────────────────────────────
+            - name: Logout from Azure
+              if: always()
+              run: az logout

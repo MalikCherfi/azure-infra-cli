@@ -17,7 +17,7 @@ jobs:
 
             # ── 2. Packaging ZIP ────────────────────────────────────
             - name: Package application
-              run: zip -r app.zip index.php
+              run: zip app.zip azure-app-service/index.php
 
             # ── 3. Déploiement sur App Service ───────────────────────
             - name: Deploy to Azure Web App

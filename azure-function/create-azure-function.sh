@@ -49,6 +49,7 @@ az functionapp deployment source config-zip \
   --name "$FUNCTION_APP" \
   --resource-group "$RESOURCE_GROUP" \
   --src func.zip
+  --async true
 
 # ─── 7. Nettoyage ────────────────────────────────────────────
 rm func.zip

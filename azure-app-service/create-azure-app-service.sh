@@ -20,13 +20,14 @@ az webapp create \
 
 # ─── 6. ZIP et déploiement ───────────────────────────────────
 echo "📦 Packaging et déploiement..."
-zip app.zip azure-app-service/index.php
+cd azure-app-service && zip ../app.zip index.php && cd ..
 
 az webapp deploy \
   --name "$APP_NAME" \
   --resource-group "$RESOURCE_GROUP" \
   --src-path ./app.zip \
   --type zip
+  --async true
 
 rm app.zip
 

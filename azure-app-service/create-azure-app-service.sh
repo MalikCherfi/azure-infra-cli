@@ -9,10 +9,6 @@ APP_SERVICE_PLAN="plan-npr-prf2026"
 PHP_VERSION="8.2"
 SKU="B1"                          
 
-# ─── 1. Connexion Azure ──────────────────────────────────────
-echo "🔐 Connexion Azure..."
-az login --use-device-code
-
 # ─── 4. Web App PHP ──────────────────────────────────────────
 echo "🌐 Création de la Web App..."
 az webapp create \

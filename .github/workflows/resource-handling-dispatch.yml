@@ -99,3 +99,43 @@ jobs:
             - name: Logout
               if: always()
               run: az logout
+
+    manage-azure-function:
+        needs: validate
+        runs-on: ubuntu-latest
+        if: github.event.inputs.targets == 'azure-function' || github.event.inputs.targets == 'both'
+        permissions:
+            id-token: write
+            contents: read
+
+        steps:
+            # ── 1. Récupération du code ──────────────────────────────
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            # ── 2. Login to Azure ────────────────────────────────────
+            - name: Login to Azure
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+            # ── 3. Création et déploiement de la Function App ────────
+            - name: Create and Deploy Function App
+              if: github.event.inputs.function_action == 'create'
+              run: |
+                  chmod +x azure-function/create-azure-function.sh
+                  ./azure-function/create-azure-function.sh
+
+            # ── 3. Suppression de la Function App ────────────────────
+            - name: Delete Function App
+              if: github.event.inputs.function_action == 'delete'
+              run: |
+                  chmod +x azure-function/delete-azure-function.sh
+                  ./azure-function/delete-azure-function.sh
+
+            # ── 5. Logout ────────────────────────────────────────────
+            - name: Logout
+              if: always()
+              run: az logout

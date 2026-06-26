@@ -9,6 +9,8 @@ az network vnet create \
   --name $VNET_NAME \
   --resource-group $RG \
   --address-prefixes $VNET_ADDRESS_PREFIX \
+  --location $LOCATION \
+  --tags $TAGS
 
 # Create the front-end subnet
 echo "Creating front-end subnet '$FRONT_SUBNET_NAME' in virtual network '$VNET_NAME'..."
@@ -16,7 +18,8 @@ az network vnet subnet create \
   --name $FRONT_SUBNET_NAME \
   --resource-group $RG \
   --vnet-name $VNET_NAME \
-  --address-prefixes $FRONT_SUBNET_ADDRESS_PREFIX
+  --address-prefixes $FRONT_SUBNET_ADDRESS_PREFIX \
+  --tags $TAGS
 
 # Create the back-end subnet
 echo "Creating back-end subnet '$BACK_SUBNET_NAME' in virtual network '$VNET_NAME'..."
@@ -24,7 +27,8 @@ az network vnet subnet create \
   --name $BACK_SUBNET_NAME \
   --resource-group $RG \
   --vnet-name $VNET_NAME \
-  --address-prefixes $BACK_SUBNET_ADDRESS_PREFIX
+  --address-prefixes $BACK_SUBNET_ADDRESS_PREFIX \
+  --tags $TAGS
 
 # List the subnets in the virtual network
 echo "Listing subnets in virtual network '$VNET_NAME'..."

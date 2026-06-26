@@ -27,17 +27,5 @@ az webapp deploy \
   --resource-group "$RESOURCE_GROUP" \
   --src-path ./app.zip \
   --type zip
-  --async true
 
 rm app.zip
-
-
-# ─── 8. URL de l'application ─────────────────────────────────
-APP_URL="https://${APP_NAME}.azurewebsites.net"
-echo ""
-echo "✅ Déploiement terminé !"
-echo "🔗 URL : $APP_URL"
-echo ""
-echo "Test de l'API :"
-sleep 15
-curl -s "$APP_URL" | python3 -m json.tool

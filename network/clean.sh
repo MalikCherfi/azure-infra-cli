@@ -3,17 +3,22 @@ set -e
 
 source ./env.sh
 
+az network vnet list \
+  --resource-group "$RG" \
+  --query "[].name" \
+  --output table
+
 # Désassocier le NSG avant suppression
 az network vnet subnet update \
   --name           "subnet-frontend" \
   --vnet-name      "$VNET_NAME" \
   --resource-group "$RG" \
-  --network-security-group "" 2>/dev/null || true
+  --network-security-group null
 
 # Supprimer la NIC de test
 az network nic delete \
   --name           "nic-test-${OWNER}-cli" \
-  --resource-group "$RG" 2>/dev/null || true
+  --resource-group "$RG"
 
 # Supprimer le NSG
 az network nsg delete \

@@ -9,6 +9,7 @@ az network nsg create \
   --name $NSG_NAME \
   --resource-group $RG \
   --location $LOCATION \
+  --tags $TAGS
 
 # Show the default security rules
 echo "Listing default security rules in network security group '$NSG_NAME'..."

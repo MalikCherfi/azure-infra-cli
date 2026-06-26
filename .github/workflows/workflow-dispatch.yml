@@ -1,14 +1,44 @@
-name: Deploy to Azure Function
+name: Deploy to Azure
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: 'Que voulez-vous déployer ?'
+        required: true
+        type: choice
+        options:
+          - app-service
+          - azure-function
+          - both
 
 jobs:
-  deploy:
+  deploy-app-service:
+    name: Build & Deploy PHP app
+    runs-on: ubuntu-latest
+    if: github.event.inputs.targets == 'app-service' || github.event.inputs.targets == 'both'
+
+    steps:
+      # ── 1. Récupération du code ──────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Packaging ZIP ────────────────────────────────────
+      - name: Package application
+        run: zip app.zip azure-app-service/index.php
+
+      # ── 3. Déploiement sur App Service ───────────────────────
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_APP_NAME_APP_SERVICE }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_APP_SERVICE }}
+          package: app.zip
+
+  deploy-azure-function:
     name: Build & Deploy Python Function
     runs-on: ubuntu-latest
+    if: github.event.inputs.targets == 'azure-function' || github.event.inputs.targets == 'both'
 
     steps:
       # ── 1. Récupération du code ──────────────────────────────

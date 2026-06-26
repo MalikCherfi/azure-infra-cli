@@ -4,7 +4,7 @@ set -e
 # ─── Variables ───────────────────────────────────────────────
 RESOURCE_GROUP="rg-malik-cherfi-prf2026"
 LOCATION="francecentral"
-APP_NAME="app-web-php-$RANDOM"
+APP_NAME="api-appservice-malik"
 APP_SERVICE_PLAN="plan-npr-prf2026"
 PHP_VERSION="8.2"
 SKU="B1"                          

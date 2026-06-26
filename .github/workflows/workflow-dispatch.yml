@@ -1,70 +1,126 @@
 name: Deploy to Azure
 
 on:
-  workflow_dispatch:
-    inputs:
-      targets:
-        description: 'Que voulez-vous déployer ?'
-        required: true
-        type: choice
-        options:
-          - app-service
-          - azure-function
-          - both
+    workflow_dispatch:
+        inputs:
+            targets:
+                description: "Que voulez-vous déployer ?"
+                required: true
+                type: choice
+                options:
+                    - app-service
+                    - azure-function
+                    - both
 
 jobs:
-  deploy-app-service:
-    name: Build & Deploy PHP app
-    runs-on: ubuntu-latest
-    if: github.event.inputs.targets == 'app-service' || github.event.inputs.targets == 'both'
+    deploy-app-service:
+        name: Build & Deploy PHP app
+        runs-on: ubuntu-latest
+        if: github.event.inputs.targets == 'app-service' || github.event.inputs.targets == 'both'
 
-    steps:
-      # ── 1. Récupération du code ──────────────────────────────
-      - name: Checkout code
-        uses: actions/checkout@v4
+        steps:
+            # ── 1. Récupération du code ──────────────────────────────
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      # ── 2. Packaging ZIP ────────────────────────────────────
-      - name: Package application
-        run: zip app.zip azure-app-service/index.php
+            # ── 2. Login to Azure ─────────────────────────────────
+            - name: Login to Azure
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # ── 3. Déploiement sur App Service ───────────────────────
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ secrets.AZURE_APP_NAME_APP_SERVICE }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_APP_SERVICE }}
-          package: app.zip
+            # ── 3. Vérifier si la Web App existe ─────────────────────
+            - name: Check if Web App exists
+              id: check_app
+              run: |
+                  EXISTS=$(az webapp show \
+                    --name ${{ secrets.AZURE_APP_NAME_APP_SERVICE }} \
+                    --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+                    --query "name" \
+                    --output tsv 2>/dev/null || echo "")
 
-  deploy-azure-function:
-    name: Build & Deploy Python Function
-    runs-on: ubuntu-latest
-    if: github.event.inputs.targets == 'azure-function' || github.event.inputs.targets == 'both'
+                  if [ -z "$EXISTS" ]; then
+                    echo "❌ La Web App n'existe pas, déploiement annulé."
+                    echo "exists=false" >> $GITHUB_OUTPUT
+                  else
+                    echo "✅ Web App trouvée : $EXISTS"
+                    echo "exists=true" >> $GITHUB_OUTPUT
+                  fi
 
-    steps:
-      # ── 1. Récupération du code ──────────────────────────────
-      - name: Checkout code
-        uses: actions/checkout@v4
+            # ── 4. Packaging ZIP ────────────────────────────────────
+            - name: Package application
+              run: zip app.zip azure-app-service/index.php
 
-      # ── 2. Setup Python ──────────────────────────────────────
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+            # ── 5. Déploiement sur App Service ───────────────────────
+            - name: Deploy to Azure Web App
+              uses: azure/webapps-deploy@v3
+              with:
+                  app-name: ${{ secrets.AZURE_APP_NAME_APP_SERVICE }}
+                  package: app.zip
 
-      # ── 3. Installation des dépendances ──────────────────────
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r azure-function/requirements.txt --target=".python_packages/lib/site-packages"
+            - name: Logout from Azure
+              run: az logout
 
-      # ── 4. Packaging ZIP ────────────────────────────────────
-      - name: Package application
-        run: cd azure-function && zip -r ../func.zip function_app.py host.json requirements.txt .python_packages/
+    deploy-azure-function:
+        name: Build & Deploy Python Function
+        runs-on: ubuntu-latest
+        if: github.event.inputs.targets == 'azure-function' || github.event.inputs.targets == 'both'
 
-      # ── 5. Déploiement sur Azure Function ────────────────────
-      - name: Deploy to Azure Function
-        uses: Azure/functions-action@v1
-        with:
-          app-name: ${{ secrets.AZURE_APP_NAME_AZURE_FUNCTION }}
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_AZURE_FUNCTION }}
-          package: func.zip
+        steps:
+            # ── 1. Récupération du code ──────────────────────────────
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            # ── 2. Login to Azure ─────────────────────────────────
+            - name: Login to Azure
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+            # ── 3. Vérifier si la function existe ─────────────────────
+            - name: Check if function exists
+              id: check_app
+              run: |
+                  EXISTS=$(az functionapp show \
+                    --name ${{ secrets.AZURE_APP_NAME_AZURE_FUNCTION }} \
+                    --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+                    --query "name" \
+                    --output tsv 2>/dev/null || echo "")
+
+                  if [ -z "$EXISTS" ]; then
+                    echo "❌ La Function n'existe pas, déploiement annulé."
+                    echo "exists=false" >> $GITHUB_OUTPUT
+                  else
+                    echo "✅ Function trouvée : $EXISTS"
+                    echo "exists=true" >> $GITHUB_OUTPUT
+                  fi
+
+            # ── 4. Setup Python ──────────────────────────────────────
+            - name: Setup Python 3.11
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
+
+            # ── 5. Installation des dépendances ──────────────────────
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r azure-function/requirements.txt --target=".python_packages/lib/site-packages"
+
+            # ── 6. Packaging ZIP ────────────────────────────────────
+            - name: Package application
+              run: cd azure-function && zip -r ../func.zip function_app.py host.json requirements.txt .python_packages/
+
+            # ── 7. Déploiement sur Azure Function ────────────────────
+            - name: Deploy to Azure Function
+              uses: Azure/functions-action@v1
+              with:
+                  app-name: ${{ secrets.AZURE_APP_NAME_AZURE_FUNCTION }}
+                  package: func.zip
+
+            - name: Logout from Azure
+              run: az logout

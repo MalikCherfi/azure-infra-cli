@@ -24,3 +24,28 @@ ACI est préférable quand :
 **Pour une startup qui lance une nouvelle API avec un trafic imprévisible et un budget limité, quel service choisiriez-vous et pourquoi ?**
 
 Azure Functions est le choix le plus adapté pour une startup avec un trafic imprévisible et un budget limité. Si personne n'appelle l'API, on ne paie rien. Le scaling automatique jusqu'à 200 instances gère les pics de trafic sans configuration supplémentaire, ce qui réduit également la charge opérationnelle.
+
+# Réponses - TP Module 4 : Réseau CLI
+
+## Question 1
+**Vous avez 251 adresses utilisables dans subnet-frontend. Si vous utilisez App Service VNet Integration, Azure réserve un bloc /28 minimum par plan App Service. Combien de plans App Service maximum pouvez-vous intégrer dans ce sous-réseau ?**
+
+4^2 est égal à 16 donc chaque plan App Service peut contenir 16 adresses - les 5 utilisées par Azure soit 11 adresses. On divise 251 par 16 pour savoir combien de bloc de 16 adresses on peut rentrer dans les 251 adresses disponible ce qui donne environ 15.
+
+## Question 2
+**Quelle règle bloque tout le trafic entrant depuis Internet par défaut ? Quel est son numéro de priorité ?
+Pourquoi AllowVnetInBound a-t-elle la priorité 65000 et DenyAllInBound la priorité 65500 ?
+Si vous créez une règle avec la priorité 100, sera-t-elle appliquée avant ou après AllowVnetInBound ?**
+
+1 . C'est la règle DenyAllInBound, le numéro de priorité est 65500
+2 . Elle à une priorité plus petite pour que l'application de la règle ne soit pas effacé par la règle DenyAllInBound, on défini les deux seule expection puis on refuse toute les autres.
+3 . Elle sera appliqué avant.
+
+## Question 3
+**Un paquet arrive sur le port 22 (SSH) depuis Internet. Dans quel ordre les règles sont-elles évaluées et quelle est la décision finale ?**
+
+. On check la règle "Allow-Http" qui à la plus petite priorité ( 100 ) - elle n'est pas appliqué car elle regarde le port 80
+. On check la règle "Allow-Https" qui à la priorité 110 - elle n'est pas appliqué car elle regarde le port 443
+. On passe à la règle "Deny-All-Inbound" qui elle est appliqué car elle contient le port 22
+
+Résultat la connexion entrante est refusé.

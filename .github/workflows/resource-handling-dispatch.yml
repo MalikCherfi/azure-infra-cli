@@ -40,6 +40,10 @@ jobs:
                   APP_ACTION="${{ github.event.inputs.app_service_action }}"
                   FUNC_ACTION="${{ github.event.inputs.function_action }}"
 
+                  echo "🔹 Target: $TARGET"
+                  echo "🔹 App Service Action: $APP_ACTION"
+                  echo "🔹 Function Action: $FUNC_ACTION"
+
                   if [[ "$TARGET" == "app-service" || "$TARGET" == "both" ]]; then
                     if [[ "$APP_ACTION" == "N/A" ]]; then
                       echo "❌ Vous devez choisir une action pour App Service"

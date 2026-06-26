@@ -54,10 +54,12 @@ jobs:
 
             # ── 4. Packaging ZIP ────────────────────────────────────
             - name: Package application
+              if: steps.check_app.outputs.exists == 'true'
               run: zip app.zip azure-app-service/index.php
 
             # ── 5. Déploiement sur App Service ───────────────────────
             - name: Deploy to Azure Web App
+              if: steps.check_app.outputs.exists == 'true'
               uses: azure/webapps-deploy@v3
               with:
                   app-name: ${{ secrets.AZURE_APP_NAME_APP_SERVICE }}
@@ -107,6 +109,7 @@ jobs:
 
             # ── 4. Setup Python ──────────────────────────────────────
             - name: Setup Python 3.11
+              if: steps.check_app.outputs.exists == 'true'
               uses: actions/setup-python@v5
               with:
                   python-version: "3.11"
@@ -119,11 +122,13 @@ jobs:
 
             # ── 6. Packaging ZIP ────────────────────────────────────
             - name: Package application
+              if: steps.check_app.outputs.exists == 'true'
               run: cd azure-function && zip -r ../func.zip function_app.py host.json requirements.txt .python_packages/
 
             # ── 7. Déploiement sur Azure Function ────────────────────
             - name: Deploy to Azure Function
               uses: Azure/functions-action@v1
+              if: steps.check_app.outputs.exists == 'true'
               with:
                   app-name: ${{ secrets.AZURE_APP_NAME_AZURE_FUNCTION }}
                   package: func.zip

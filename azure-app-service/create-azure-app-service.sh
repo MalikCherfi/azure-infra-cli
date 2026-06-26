@@ -20,7 +20,7 @@ az webapp create \
 
 # ─── 6. ZIP et déploiement ───────────────────────────────────
 echo "📦 Packaging et déploiement..."
-zip app.zip index.php
+zip app.zip azure-app-service/index.php
 
 az webapp deploy \
   --name "$APP_NAME" \

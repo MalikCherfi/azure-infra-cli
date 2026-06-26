@@ -17,6 +17,9 @@ jobs:
         name: Build & Deploy PHP app
         runs-on: ubuntu-latest
         if: github.event.inputs.targets == 'app-service' || github.event.inputs.targets == 'both'
+        permissions:
+            id-token: write
+            contents: read
 
         steps:
             # ── 1. Récupération du code ──────────────────────────────
@@ -67,6 +70,9 @@ jobs:
         name: Build & Deploy Python Function
         runs-on: ubuntu-latest
         if: github.event.inputs.targets == 'azure-function' || github.event.inputs.targets == 'both'
+        permissions:
+            id-token: write
+            contents: read
 
         steps:
             # ── 1. Récupération du code ──────────────────────────────

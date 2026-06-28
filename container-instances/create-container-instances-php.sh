@@ -5,7 +5,7 @@ RESOURCE_GROUP="rg-malik-cherfi-prf2026"
 LOCATION="francecentral"
 CONTAINER_NAME="api-aci-malik-php"
 DNS_LABEL="aci-malik-php"
-ACR_NAME="acrmalik$RANDOM"
+ACR_NAME="acrmalikphp"
 
 # ─── 1. Créer le Container Registry ─────────────────────────
 az acr create \

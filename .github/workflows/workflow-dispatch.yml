@@ -1,137 +1,137 @@
 name: Deploy to Azure
 
 on:
-    workflow_dispatch:
-        inputs:
-            targets:
-                description: "Que voulez-vous déployer ?"
-                required: true
-                type: choice
-                options:
-                    - app-service
-                    - azure-function
-                    - both
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: "Que voulez-vous déployer ?"
+        required: true
+        type: choice
+        options:
+          - app-service
+          - azure-function
+          - both
 
 jobs:
-    deploy-app-service:
-        name: Build & Deploy PHP app
-        runs-on: ubuntu-latest
-        if: github.event.inputs.targets == 'app-service' || github.event.inputs.targets == 'both'
-        permissions:
-            id-token: write
-            contents: read
+  deploy-app-service:
+    name: Build & Deploy PHP app
+    runs-on: ubuntu-latest
+    if: github.event.inputs.targets == 'app-service' || github.event.inputs.targets == 'both'
+    permissions:
+      id-token: write
+      contents: read
 
-        steps:
-            # ── 1. Récupération du code ──────────────────────────────
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      # ── 1. Récupération du code ──────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            # ── 2. Login to Azure ─────────────────────────────────
-            - name: Login to Azure
-              uses: azure/login@v2
-              with:
-                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
-                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # ── 2. Login to Azure ─────────────────────────────────
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-            # ── 3. Vérifier si la Web App existe ─────────────────────
-            - name: Check if Web App exists
-              id: check_app
-              run: |
-                  EXISTS=$(az webapp show \
-                    --name ${{ secrets.AZURE_APP_NAME_APP_SERVICE }} \
-                    --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-                    --query "name" \
-                    --output tsv 2>/dev/null || echo "")
+      # ── 3. Vérifier si la Web App existe ─────────────────────
+      - name: Check if Web App exists
+        id: check_app
+        run: |
+          EXISTS=$(az webapp show \
+            --name ${{ secrets.AZURE_APP_NAME_APP_SERVICE }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --query "name" \
+            --output tsv 2>/dev/null || echo "")
 
-                  if [ -z "$EXISTS" ]; then
-                    echo "❌ La Web App n'existe pas, déploiement annulé."
-                    echo "exists=false" >> $GITHUB_OUTPUT
-                  else
-                    echo "✅ Web App trouvée : $EXISTS"
-                    echo "exists=true" >> $GITHUB_OUTPUT
-                  fi
+          if [ -z "$EXISTS" ]; then
+            echo "❌ La Web App n'existe pas, déploiement annulé."
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Web App trouvée : $EXISTS"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
 
-            # ── 4. Packaging ZIP ────────────────────────────────────
-            - name: Package application
-              if: steps.check_app.outputs.exists == 'true'
-              run: zip app.zip azure-app-service/index.php
+      # ── 4. Packaging ZIP ────────────────────────────────────
+      - name: Package application
+        if: steps.check_app.outputs.exists == 'true'
+        run: zip app.zip azure-app-service/index.php
 
-            # ── 5. Déploiement sur App Service ───────────────────────
-            - name: Deploy to Azure Web App
-              if: steps.check_app.outputs.exists == 'true'
-              uses: azure/webapps-deploy@v3
-              with:
-                  app-name: ${{ secrets.AZURE_APP_NAME_APP_SERVICE }}
-                  package: app.zip
+      # ── 5. Déploiement sur App Service ───────────────────────
+      - name: Deploy to Azure Web App
+        if: steps.check_app.outputs.exists == 'true'
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_APP_NAME_APP_SERVICE }}
+          package: app.zip
 
-            - name: Logout from Azure
-              run: az logout
+      - name: Logout from Azure
+        run: az logout
 
-    deploy-azure-function:
-        name: Build & Deploy Python Function
-        runs-on: ubuntu-latest
-        if: github.event.inputs.targets == 'azure-function' || github.event.inputs.targets == 'both'
-        permissions:
-            id-token: write
-            contents: read
+  deploy-azure-function:
+    name: Build & Deploy Python Function
+    runs-on: ubuntu-latest
+    if: github.event.inputs.targets == 'azure-function' || github.event.inputs.targets == 'both'
+    permissions:
+      id-token: write
+      contents: read
 
-        steps:
-            # ── 1. Récupération du code ──────────────────────────────
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      # ── 1. Récupération du code ──────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            # ── 2. Login to Azure ─────────────────────────────────
-            - name: Login to Azure
-              uses: azure/login@v2
-              with:
-                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
-                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # ── 2. Login to Azure ─────────────────────────────────
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-            # ── 3. Vérifier si la function existe ─────────────────────
-            - name: Check if function exists
-              id: check_app
-              run: |
-                  EXISTS=$(az functionapp show \
-                    --name ${{ secrets.AZURE_APP_NAME_AZURE_FUNCTION }} \
-                    --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-                    --query "name" \
-                    --output tsv 2>/dev/null || echo "")
+      # ── 3. Vérifier si la function existe ─────────────────────
+      - name: Check if function exists
+        id: check_app
+        run: |
+          EXISTS=$(az functionapp show \
+            --name ${{ secrets.AZURE_APP_NAME_AZURE_FUNCTION }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --query "name" \
+            --output tsv 2>/dev/null || echo "")
 
-                  if [ -z "$EXISTS" ]; then
-                    echo "❌ La Function n'existe pas, déploiement annulé."
-                    echo "exists=false" >> $GITHUB_OUTPUT
-                  else
-                    echo "✅ Function trouvée : $EXISTS"
-                    echo "exists=true" >> $GITHUB_OUTPUT
-                  fi
+          if [ -z "$EXISTS" ]; then
+            echo "❌ La Function n'existe pas, déploiement annulé."
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Function trouvée : $EXISTS"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
 
-            # ── 4. Setup Python ──────────────────────────────────────
-            - name: Setup Python 3.11
-              if: steps.check_app.outputs.exists == 'true'
-              uses: actions/setup-python@v5
-              with:
-                  python-version: "3.11"
+      # ── 4. Setup Python ──────────────────────────────────────
+      - name: Setup Python 3.11
+        if: steps.check_app.outputs.exists == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-            # ── 5. Installation des dépendances ──────────────────────
-            - name: Install dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install -r azure-function/requirements.txt --target=".python_packages/lib/site-packages"
+      # ── 5. Installation des dépendances ──────────────────────
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r azure-function/requirements.txt --target=".python_packages/lib/site-packages"
 
-            # ── 6. Packaging ZIP ────────────────────────────────────
-            - name: Package application
-              if: steps.check_app.outputs.exists == 'true'
-              run: cd azure-function && zip -r ../func.zip function_app.py host.json requirements.txt .python_packages/
+      # ── 6. Packaging ZIP ────────────────────────────────────
+      - name: Package application
+        if: steps.check_app.outputs.exists == 'true'
+        run: cd azure-function && zip -r ../func.zip function_app.py host.json requirements.txt .python_packages/
 
-            # ── 7. Déploiement sur Azure Function ────────────────────
-            - name: Deploy to Azure Function
-              uses: Azure/functions-action@v1
-              if: steps.check_app.outputs.exists == 'true'
-              with:
-                  app-name: ${{ secrets.AZURE_APP_NAME_AZURE_FUNCTION }}
-                  package: func.zip
+      # ── 7. Déploiement sur Azure Function ────────────────────
+      - name: Deploy to Azure Function
+        uses: Azure/functions-action@v1
+        if: steps.check_app.outputs.exists == 'true'
+        with:
+          app-name: ${{ secrets.AZURE_APP_NAME_AZURE_FUNCTION }}
+          package: func.zip
 
-            - name: Logout from Azure
-              run: az logout
+      - name: Logout from Azure
+        run: az logout

@@ -3,8 +3,8 @@ set -e
 
 RESOURCE_GROUP="rg-malik-cherfi-prf2026"
 LOCATION="francecentral"
-CONTAINER_NAME="aci-$RANDOM"
-DNS_LABEL="aci-malik"
+CONTAINER_NAME="api-aci-malik-hello"
+DNS_LABEL="aci-malik-hello"
 IMAGE="mcr.microsoft.com/azuredocs/aci-helloworld"
 
 # ─── 1. Déploiement du conteneur ─────────────────────────────

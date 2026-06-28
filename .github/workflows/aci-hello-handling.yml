@@ -1,0 +1,46 @@
+name: Container Instances Hello
+
+on:
+    workflow_dispatch:
+        inputs:
+            action:
+                description: "Action Container Instance Hello"
+                required: true
+                type: choice
+                options:
+                    - create
+                    - delete
+
+jobs:
+    manage-container-hello:
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: read
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Login to Azure
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+            - name: Deploy Hello Container
+              if: github.event.inputs.action == 'create'
+              run: |
+                  chmod +x container-instances/create-container-instances-hello.sh
+                  ./container-instances/create-container-instances-hello.sh
+
+            - name: Delete Hello Container
+              if: github.event.inputs.action == 'delete'
+              run: |
+                  chmod +x container-instances/delete-aci-hello.sh
+                  ./container-instances/delete-aci-hello.sh
+
+            - name: Logout
+              if: always()
+              run: az logout

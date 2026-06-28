@@ -32,14 +32,14 @@ jobs:
             - name: Deploy Hello Container
               if: github.event.inputs.action == 'create'
               run: |
-                  chmod +x container-instances/create-container-instances-hello.sh
-                  ./container-instances/create-container-instances-hello.sh
+                  chmod +x container-instances/create-container-instances.sh
+                  ./container-instances/create-container-instances.sh
 
             - name: Delete Hello Container
               if: github.event.inputs.action == 'delete'
               run: |
-                  chmod +x container-instances/delete-aci-hello.sh
-                  ./container-instances/delete-aci-hello.sh
+                  chmod +x container-instances/delete-container-instances.sh
+                  ./container-instances/delete-container-instances.sh
 
             - name: Logout
               if: always()

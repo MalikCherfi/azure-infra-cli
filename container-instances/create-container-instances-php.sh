@@ -3,7 +3,7 @@ set -e
 
 RESOURCE_GROUP="rg-malik-cherfi-prf2026"
 LOCATION="francecentral"
-CONTAINER_NAME="aci-malik-$RANDOM"
+CONTAINER_NAME="api-aci-malik-php"
 DNS_LABEL="aci-malik-php"
 ACR_NAME="acrmalik$RANDOM"
 

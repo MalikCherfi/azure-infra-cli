@@ -7,28 +7,25 @@ CONTAINER_NAME="aci-malik-$RANDOM"
 DNS_LABEL="aci-malik-php"
 ACR_NAME="acrmalik$RANDOM"
 
-# ─── 1. Connexion ────────────────────────────────────────────
-az login --use-device-code
-
-# ─── 2. Créer le Container Registry ─────────────────────────
+# ─── 1. Créer le Container Registry ─────────────────────────
 az acr create \
   --name "$ACR_NAME" \
   --resource-group "$RESOURCE_GROUP" \
   --sku Basic \
   --admin-enabled true
 
-# ─── 3. Builder et pusher l'image directement sur ACR ────────
+# ─── 2. Builder et pusher l'image directement sur ACR ────────
 az acr build \
   --registry "$ACR_NAME" \
   --image "api-php:latest" \
-  .
+  ./container-instances
 
-# ─── 4. Récupérer les credentials ACR ────────────────────────
+# ─── 3. Récupérer les credentials ACR ────────────────────────
 ACR_SERVER="${ACR_NAME}.azurecr.io"
 ACR_USERNAME=$(az acr credential show --name "$ACR_NAME" --query username --output tsv)
 ACR_PASSWORD=$(az acr credential show --name "$ACR_NAME" --query passwords[0].value --output tsv)
 
-# ─── 5. Déployer le conteneur avec ton image ─────────────────
+# ─── 4. Déployer le conteneur avec ton image ─────────────────
 az container create \
   --name "$CONTAINER_NAME" \
   --resource-group "$RESOURCE_GROUP" \
@@ -45,5 +42,5 @@ az container create \
   --dns-name-label "$DNS_LABEL" \
   --os-type Linux
 
-# ─── 6. URL ──────────────────────────────────────────────────
+# ─── 5. URL ──────────────────────────────────────────────────
 echo "✅ Déployé sur : http://${DNS_LABEL}.${LOCATION}.azurecontainer.io"
